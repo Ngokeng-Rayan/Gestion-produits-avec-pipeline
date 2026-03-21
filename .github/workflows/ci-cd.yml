@@ -244,8 +244,7 @@ jobs:
           images: ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api
           tags: |
             type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value={{branch}}-{{date 'YYYYMMDD-HHmmss'}}
+            type=sha,prefix=sha-
 
       - name: Construction et publication de l'image Docker
         uses: docker/build-push-action@v5
@@ -289,15 +288,15 @@ jobs:
 
       - name: Re-tagging de l'image pour la production
         run: |
-          # Téléchargement de l'image construite
-          docker pull ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:main-${{ github.sha }}
+          # Téléchargement de l'image construite avec le tag SHA
+          docker pull ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }}
           
           # Tag latest (dernière version)
-          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:main-${{ github.sha }} \
+          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }} \
                      ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:latest
           
           # Tag avec version datée (pour rollback)
-          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:main-${{ github.sha }} \
+          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }} \
                      ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:v${{ steps.date.outputs.date }}
           
           # Publication des tags
