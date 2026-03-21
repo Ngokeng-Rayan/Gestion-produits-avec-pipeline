@@ -217,10 +217,10 @@ jobs:
           retention-days: 7
 
   # ==========================================
-  # JOB 5 : DOCKER BUILD - Construction de l'image
+  # JOB 5 : DOCKER BUILD & DEPLOY - Construction et déploiement
   # ==========================================
-  construction-docker:
-    name: Construction de l'Image Docker
+  construction-et-deploiement-docker:
+    name: Construction & Déploiement Docker
     runs-on: ubuntu-latest
     needs: [verification-style, analyse-securite, tests]
 
@@ -237,7 +237,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extraction des métadonnées (tags, labels)
+      - name: Récupération de la date pour le versioning
+        id: date
+        run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+
+      - name: Définition des tags Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -245,6 +249,8 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=v${{ steps.date.outputs.date }},enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Construction et publication de l'image Docker
         uses: docker/build-push-action@v5
@@ -266,54 +272,13 @@ jobs:
           echo "Tags créés:"
           echo "${{ steps.meta.outputs.tags }}"
 
-  # ==========================================
-  # JOB 6 : DEPLOY PRODUCTION - Déploiement sur Docker Hub
-  # ==========================================
-  deploiement-production:
-    name: Déploiement en Production
-    runs-on: ubuntu-latest
-    needs: construction-docker
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Connexion à Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Récupération de la date pour le versioning
-        id: date
-        run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
-
-      - name: Re-tagging de l'image pour la production
-        run: |
-          # Téléchargement de l'image construite avec le tag SHA
-          docker pull ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }}
-          
-          # Tag latest (dernière version)
-          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }} \
-                     ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:latest
-          
-          # Tag avec version datée (pour rollback)
-          docker tag ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:sha-${{ github.sha }} \
-                     ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:v${{ steps.date.outputs.date }}
-          
-          # Publication des tags
-          docker push ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api:v${{ steps.date.outputs.date }}
-
       - name: Résumé du déploiement
+        if: github.ref == 'refs/heads/main'
         run: |
-          echo "Déploiement réussi"
+          echo "Déploiement en production réussi"
           echo "Image: ${{ secrets.DOCKER_USERNAME }}/gestion-produit-api"
-          echo "Tags: latest, v${{ steps.date.outputs.date }}"
+          echo "Tags: latest, v${{ steps.date.outputs.date }}, sha-${{ github.sha }}"
           echo "Docker Hub: https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/gestion-produit-api"
           echo "SHA: ${{ github.sha }}"
           echo "Auteur: ${{ github.actor }}"
           echo "Commit: ${{ github.event.head_commit.message }}"
-
-      - name: Nettoyage des anciennes images (optionnel)
-        run: |
-          echo "Pensez à nettoyer les anciennes images sur Docker Hub pour économiser de l'espace"
-          echo "Conserver: latest, v${{ steps.date.outputs.date }}, et les 5 dernières versions"
