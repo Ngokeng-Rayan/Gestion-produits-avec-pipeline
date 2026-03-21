@@ -76,7 +76,7 @@ jobs:
           path: vendor/
 
       - name: Exécution de Laravel Pint
-        run: ./vendor/bin/pint --test
+        run: php vendor/bin/pint --test
 
   # ==========================================
   # JOB 3 : SECURITY SCAN - Analyse statique
@@ -104,11 +104,11 @@ jobs:
           path: vendor/
 
       - name: Exécution de l'analyse PHPStan
-        run: ./vendor/bin/phpstan analyse --memory-limit=2G
+        run: php vendor/bin/phpstan analyse --memory-limit=2G
         continue-on-error: true
 
       - name: Vérification des vulnérabilités des dépendances
-        run: composer audit
+        run: composer audit --no-interaction
         continue-on-error: true
 
   # ==========================================
@@ -170,7 +170,7 @@ jobs:
           DB_DATABASE: database/database.sqlite
 
       - name: Exécution des Tests Unitaires
-        run: php artisan test --testsuite=Unit --parallel
+        run: php artisan test --testsuite=Unit
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
