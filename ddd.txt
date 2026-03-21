@@ -1,0 +1,183 @@
+name: CI/CD Pipeline
+
+# Déclenchement : à chaque push ou pull request sur n'importe quelle branche
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+# Variables d'environnement globales
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '20'
+
+jobs:
+  # ==========================================
+  # JOB 1 : CI - Tests et Vérifications
+  # ==========================================
+  ci:
+    name: 🧪 CI - Tests & Quality Checks
+    runs-on: ubuntu-latest
+
+    # Service MySQL pour les tests
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: testing_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      # Étape 1 : Récupérer le code source
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Configurer PHP avec les extensions nécessaires
+      - name: 🐘 Setup PHP ${{ env.PHP_VERSION }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, ctype, json, bcmath, pdo, pdo_mysql, zip, gd
+          coverage: none
+          tools: composer:v2
+
+      # Étape 3 : Mettre en cache les dépendances Composer
+      - name: 📦 Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # Étape 4 : Installer les dépendances PHP
+      - name: 🔧 Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Étape 5 : Installer PHPStan pour l'analyse statique
+      # - name: 📊 Install PHPStan
+      #   run: composer require --dev phpstan/phpstan larastan/larastan --no-interaction
+
+      # Étape 6 : Copier le fichier .env pour les tests
+      - name: 📄 Copy .env file
+        run: cp .env.example .env
+
+      # Étape 7 : Générer la clé d'application Laravel
+      - name: 🔑 Generate application key
+        run: php artisan key:generate
+
+      # Étape 8 : Créer la base de données SQLite pour les tests
+      - name: 🗄️ Create SQLite database
+        run: touch database/database.sqlite
+
+      # Étape 9 : Exécuter les migrations
+      - name: 🚀 Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      # Étape 10 : Vérifier le style de code avec Laravel Pint
+      - name: ✨ Check code style (Laravel Pint)
+        run: ./vendor/bin/pint --test
+
+      # Étape 11 : Analyse statique avec PHPStan
+      - name: 🔍 Run PHPStan analysis
+        run: ./vendor/bin/phpstan analyse --memory-limit=2G
+        continue-on-error: true  # Ne pas bloquer si PHPStan trouve des erreurs (première fois)
+
+      # Étape 12 : Exécuter les tests PHPUnit
+      - name: 🧪 Run PHPUnit tests
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      # Étape 13 : Créer un artefact avec le code testé
+      - name: 📦 Create artifact
+        if: success()
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/laravel-app-${{ github.sha }}.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=storage/logs \
+            --exclude=storage/framework/cache \
+            --exclude=storage/framework/sessions \
+            --exclude=storage/framework/views \
+            .
+
+      # Étape 14 : Upload de l'artefact
+      - name: 📤 Upload artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-app-${{ github.sha }}
+          path: artifacts/laravel-app-${{ github.sha }}.tar.gz
+          retention-days: 7
+
+   # ==========================================
+  # JOB 2 : CD - Build & Push Docker Image
+  # ==========================================
+  cd:
+    name: 🐳 CD - Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: ci  # Attend que le job CI soit terminé avec succès
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'  # Seulement sur push vers main
+
+    steps:
+      # Étape 1 : Récupérer le code
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Configurer Docker Buildx (pour multi-platform builds)
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Étape 3 : Se connecter à Docker Hub
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Étape 4 : Extraire les métadonnées (tags, labels)
+      - name: 🏷️ Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/laravel-inventory-api
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Étape 5 : Build et Push de l'image Docker
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            user=laravel
+            uid=1000
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Étape 6 : Afficher les informations de l'image
+      - name: 📋 Image digest
+        run: |
+          echo "✅ Docker image successfully built and pushed!"
+          echo "Tags:"
+          echo "${{ steps.meta.outputs.tags }}"

@@ -1,0 +1,19 @@
+meta {
+  name: List All Products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/products
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Lister tous les produits avec pagination
+}

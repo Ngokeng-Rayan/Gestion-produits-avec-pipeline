@@ -1,0 +1,43 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8000/api/register
+  "errors": {
+    "email": [
+      "Les identifiants sont incorrects."
+    ]
+  }
+http://localhost:8000/api/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Rayan",
+    "email": "rayanngokeng1@gmail.com",
+    "password": "R@y@n2005",
+    "password_confirmation": "R@y@n2005"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+      var jsonData = res.getBody();
+      bru.setEnvVar("auth_token", jsonData.token);
+      bru.setEnvVar("user_id", jsonData.user.id);
+      console.log("Token saved: " + jsonData.token);
+  }
+}
+
+docs {
+  Créer un nouveau compte utilisateur
+}

@@ -1,0 +1,31 @@
+meta {
+  name: Create Product - iPhone
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{base_url}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "iPhone 15 Pro Max",
+    "description": "Smartphone Apple 256GB, Titane naturel",
+    "price": 1399.99,
+    "quantity": 25,
+    "category_id": 2,
+    "image": "iphone-15-pro-max.jpg"
+  }
+}
+
+docs {
+  Créer un produit iPhone
+}

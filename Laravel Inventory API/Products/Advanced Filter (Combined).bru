@@ -1,0 +1,29 @@
+meta {
+  name: Advanced Filter (Combined)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/api/products?search=laptop&category_id=1&min_price=1000&in_stock=true&sort_by=price&sort_order=desc&per_page=5
+  body: none
+  auth: none
+}
+
+params:query {
+  search: laptop
+  category_id: 1
+  min_price: 1000
+  in_stock: true
+  sort_by: price
+  sort_order: desc
+  per_page: 5
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Recherche avancée avec tous les filtres combinés
+}

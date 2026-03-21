@@ -1,0 +1,24 @@
+meta {
+  name: Filter Products by Price Range
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/api/products?min_price=500&max_price=2000
+  body: none
+  auth: none
+}
+
+params:query {
+  min_price: 500
+  max_price: 2000
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Filtrer les produits par fourchette de prix
+}

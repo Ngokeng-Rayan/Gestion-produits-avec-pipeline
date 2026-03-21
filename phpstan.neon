@@ -1,0 +1,25 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - routes
+        - config
+        - database
+
+    # Level 0 est le plus permissif, 9 le plus strict
+    # Commencez avec level 5, puis augmentez progressivement
+    level: 5
+
+    ignoreErrors:
+        # Ignorer certaines erreurs spécifiques si nécessaire
+        # - '#Call to an undefined method#'
+
+    excludePaths:
+        - vendor
+        - storage
+        - bootstrap/cache
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false

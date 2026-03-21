@@ -1,0 +1,38 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "MacBook Pro M3",
+    "description": "Ordinateur portable Apple avec puce M3, 16GB RAM, 512GB SSD",
+    "price": 2499.99,
+    "quantity": 10,
+    "category_id": 1,
+    "image": "macbook-pro-m3.jpg"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+      var jsonData = res.getBody();
+      bru.setEnvVar("product_id", jsonData.id);
+  }
+}
+
+docs {
+  Créer un nouveau produit
+}

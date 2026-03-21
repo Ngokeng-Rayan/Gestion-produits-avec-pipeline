@@ -1,0 +1,36 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8000/api/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer 3|FYgNKe6a9YyeoC5JPi4Xkh3yXAw5OweXyc3AAsfBabadf027
+}
+
+body:json {
+  {
+    "email": "rayanngokeng1@gmail.com",
+    "password": "R@y@n2005"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+      var jsonData = res.getBody();
+      bru.setEnvVar("auth_token", jsonData.token);
+      bru.setEnvVar("user_id", jsonData.user.id);
+      console.log("Token saved: " + jsonData.token);
+  }
+}
+
+docs {
+  Se connecter avec un compte existant
+}

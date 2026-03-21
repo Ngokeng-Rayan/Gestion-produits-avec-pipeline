@@ -1,0 +1,19 @@
+meta {
+  name: Delete Product
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{base_url}}/api/products/{{product_id}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Supprimer un produit (seul le propriétaire peut le faire)
+}

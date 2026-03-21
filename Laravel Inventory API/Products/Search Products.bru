@@ -1,0 +1,23 @@
+meta {
+  name: Search Products
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/api/products?search=laptop
+  body: none
+  auth: none
+}
+
+params:query {
+  search: laptop
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Rechercher des produits par nom
+}

@@ -1,0 +1,19 @@
+meta {
+  name: Get Dashboard Statistics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/dashboard/stats
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Obtenir toutes les statistiques du dashboard (total produits, valeur inventaire, stock faible, etc.)
+}

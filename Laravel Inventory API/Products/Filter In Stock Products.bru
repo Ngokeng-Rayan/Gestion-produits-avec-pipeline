@@ -1,0 +1,23 @@
+meta {
+  name: Filter In Stock Products
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/api/products?in_stock=true
+  body: none
+  auth: none
+}
+
+params:query {
+  in_stock: true
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+docs {
+  Afficher uniquement les produits en stock
+}

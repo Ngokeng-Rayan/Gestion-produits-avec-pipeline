@@ -1,0 +1,27 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/api/categories/{{category_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Électronique Grand Public",
+    "description": "Tous les appareils électroniques"
+  }
+}
+
+docs {
+  Mettre à jour une catégorie
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Create Category
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/api/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Électronique",
+    "slug": "electronique",
+    "description": "Appareils électroniques divers"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+      var jsonData = res.getBody();
+      bru.setEnvVar("category_id", jsonData.id);
+  }
+}
+
+docs {
+  Créer une nouvelle catégorie
+}
