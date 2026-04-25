@@ -52,11 +52,12 @@ input,select,textarea,button{font:inherit}
 .form-group.chk input[type=checkbox]{width:auto}
 
 /* ─── Auth Pages ─── */
-.auth-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4f46e5 100%)}
+.auth-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#064e3b 0%,#065f46 50%,#059669 100%)}
 .auth-card{width:100%;max-width:420px;background:var(--bg-card);padding:40px;border-radius:16px;box-shadow:var(--shadow-lg)}
 .auth-header{text-align:center;margin-bottom:28px}
 .auth-header h1{font-size:1.6rem;margin-top:8px;color:var(--text)}
 .auth-header p{color:var(--text-muted);font-size:.92rem;margin-top:4px}
+.auth-page .btn-primary{background:#059669}.auth-page .btn-primary:hover{background:#047857}
 .auth-logo{color:var(--primary)}
 .auth-footer{text-align:center;margin-top:20px;color:var(--text-muted);font-size:.88rem}
 
