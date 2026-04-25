@@ -1,20 +1,18 @@
-version: '3.8'
-
 services:
-  # Application PHP
+  # Application PHP (Backend Laravel)
   app:
     build:
       args:
         user: laravel
         uid: 1000
-      context: ./
+      context: ./backend
       dockerfile: Dockerfile
     image: laravel-app
     container_name: laravel-app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - ./:/var/www
+      - ./backend:/var/www
     networks:
       - laravel
 
@@ -26,8 +24,27 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./:/var/www
-      - ./docker/nginx:/etc/nginx/conf.d
+      - ./backend:/var/www
+      - ./backend/docker/nginx:/etc/nginx/conf.d
+    networks:
+      - laravel
+
+  # Frontend React
+  frontend:
+    image: node:20-alpine
+    container_name: stockpro-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASEURL: http://localhost:8000/api
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - nginx
     networks:
       - laravel
 
@@ -66,10 +83,167 @@ services:
     depends_on:
       - db
 
+  # ==========================================
+  # MONITORING & OBSERVABILITY STACK
+  # ==========================================
+
+  # Alertmanager - Gestion des alertes
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: laravel-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./backend/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - laravel
+
+  # Prometheus - Collecte de métriques
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: laravel-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./backend/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./backend/prometheus/alerts:/etc/prometheus/alerts
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - laravel
+
+  # Grafana - Visualisation des métriques
+  grafana:
+    image: grafana/grafana:latest
+    container_name: laravel-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      # Configuration SMTP pour Gmail
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:465
+      - GF_SMTP_USER=naassarl98@gmail.com
+      - GF_SMTP_PASSWORD=wyjz hjnj vvvm kqqv
+      - GF_SMTP_FROM_ADDRESS=naassarl98@gmail.com
+      - GF_SMTP_FROM_NAME=Laravel Monitoring
+      - GF_SMTP_SKIP_VERIFY=true
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./backend/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - laravel
+    depends_on:
+      - prometheus
+
+  # Node Exporter - Métriques système (CPU, RAM, Disque)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: laravel-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - laravel
+
+  # Elasticsearch - Stockage des logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: laravel-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - laravel
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Logstash - Collecte et transformation des logs
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: laravel-logstash
+    restart: unless-stopped
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+    volumes:
+      - ./backend/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./backend/storage/logs:/var/www/storage/logs:ro
+    networks:
+      - laravel
+    depends_on:
+      - elasticsearch
+
+  # Kibana - Visualisation des logs
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: laravel-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - laravel
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 networks:
   laravel:
     driver: bridge
 
 volumes:
   dbdata:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  elasticsearch-data:
     driver: local

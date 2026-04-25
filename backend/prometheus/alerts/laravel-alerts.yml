@@ -1,0 +1,161 @@
+groups:
+  # ==========================================
+  # ALERTES SYSTÈME
+  # ==========================================
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # Alerte CPU élevé
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 2m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "Utilisation CPU élevée"
+          description: "Le CPU est utilisé à {{ $value | humanize }}% depuis plus de 2 minutes."
+          
+      # Alerte CPU critique
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 1m
+        labels:
+          severity: critical
+          category: system
+        annotations:
+          summary: "⚠️ CRITIQUE : CPU saturé"
+          description: "Le CPU est utilisé à {{ $value | humanize }}% ! Intervention immédiate requise."
+          
+      # Alerte RAM élevée
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "Utilisation RAM élevée"
+          description: "La RAM est utilisée à {{ $value | humanize }}% depuis plus de 2 minutes."
+          
+      # Alerte RAM critique
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+          category: system
+        annotations:
+          summary: "⚠️ CRITIQUE : RAM saturée"
+          description: "La RAM est utilisée à {{ $value | humanize }}% ! Risque de crash imminent."
+
+  # ==========================================
+  # ALERTES APPLICATION LARAVEL
+  # ==========================================
+  - name: laravel_alerts
+    interval: 30s
+    rules:
+      # Alerte API indisponible
+      - alert: LaravelAPIDown
+        expr: up{job="laravel-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: application
+        annotations:
+          summary: "🚨 API Laravel indisponible"
+          description: "L'API Laravel ne répond plus depuis plus de 1 minute. Vérifiez les conteneurs Docker."
+          
+      # Alerte produits en rupture
+      - alert: HighStockOutage
+        expr: laravel_products_out_of_stock > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Nombreux produits en rupture de stock"
+          description: "{{ $value }} produits sont en rupture de stock. Réapprovisionnement nécessaire."
+          
+      # Alerte produits en rupture critique
+      - alert: CriticalStockOutage
+        expr: laravel_products_out_of_stock > 20
+        for: 2m
+        labels:
+          severity: critical
+          category: business
+        annotations:
+          summary: "⚠️ CRITIQUE : Rupture de stock massive"
+          description: "{{ $value }} produits sont en rupture ! Impact commercial important."
+          
+      # Alerte temps de réponse lent
+      - alert: SlowResponseTime
+        expr: laravel_request_duration_seconds > 2
+        for: 3m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Temps de réponse API lent"
+          description: "L'API met {{ $value | humanize }}s à répondre. Performance dégradée."
+          
+      # Alerte temps de réponse critique
+      - alert: CriticalResponseTime
+        expr: laravel_request_duration_seconds > 5
+        for: 1m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "⚠️ CRITIQUE : API très lente"
+          description: "L'API met {{ $value | humanize }}s à répondre ! Expérience utilisateur catastrophique."
+          
+      # Alerte mode debug activé en production
+      - alert: DebugModeEnabled
+        expr: laravel_debug_mode == 1
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "⚠️ Mode debug activé en production"
+          description: "Le mode debug est activé ! Risque de fuite d'informations sensibles."
+          
+      # Alerte base de données volumineuse
+      - alert: LargeDatabaseSize
+        expr: laravel_database_size_bytes > 10737418240
+        for: 10m
+        labels:
+          severity: info
+          category: database
+        annotations:
+          summary: "Base de données volumineuse"
+          description: "La base de données fait {{ $value | humanize }} bytes. Envisagez un nettoyage ou une optimisation."
+
+  # ==========================================
+  # ALERTES PROMETHEUS
+  # ==========================================
+  - name: prometheus_alerts
+    interval: 30s
+    rules:
+      # Alerte échec de collecte
+      - alert: PrometheusScrapeFailing
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: warning
+          category: monitoring
+        annotations:
+          summary: "Échec de collecte des métriques"
+          description: "Prometheus ne peut pas collecter les métriques de {{ $labels.job }} depuis 2 minutes."
+          
+      # Alerte Prometheus surchargé
+      - alert: PrometheusHighLoad
+        expr: rate(prometheus_engine_query_duration_seconds_sum[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          category: monitoring
+        annotations:
+          summary: "Prometheus surchargé"
+          description: "Prometheus met trop de temps à exécuter les requêtes. Performances dégradées."

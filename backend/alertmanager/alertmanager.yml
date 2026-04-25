@@ -1,0 +1,160 @@
+global:
+  # Configuration SMTP pour l'envoi d'emails via Gmail
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'naassarl98@gmail.com'
+  smtp_auth_username: 'naassarl98@gmail.com'
+  smtp_auth_password: 'wyjz hjnj vvvm kqqv'
+  smtp_require_tls: true
+
+# Configuration du routage des alertes
+route:
+  # Grouper les alertes par catégorie et attendre 30s avant d'envoyer
+  group_by: ['alertname', 'category', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  
+  # Destinataire par défaut
+  receiver: 'email-rayan'
+  
+  # Routes spécifiques selon la sévérité
+  routes:
+    # Alertes critiques : envoi immédiat
+    - match:
+        severity: critical
+      receiver: 'email-rayan-critical'
+      group_wait: 10s
+      repeat_interval: 1h
+      
+    # Alertes warning : envoi groupé
+    - match:
+        severity: warning
+      receiver: 'email-rayan'
+      group_wait: 30s
+      repeat_interval: 4h
+      
+    # Alertes info : envoi quotidien
+    - match:
+        severity: info
+      receiver: 'email-rayan'
+      group_wait: 1h
+      repeat_interval: 24h
+
+# Configuration des destinataires
+receivers:
+  # Destinataire pour alertes normales et warnings
+  - name: 'email-rayan'
+    email_configs:
+      - to: 'rayanngokeng1@gmail.com'
+        headers:
+          Subject: '[Laravel API] {{ .GroupLabels.severity | toUpper }} - {{ .GroupLabels.alertname }}'
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: #3498db; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+              .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+              .alert { background: #fff; padding: 15px; margin: 10px 0; border-left: 4px solid #e74c3c; }
+              .alert.warning { border-left-color: #f39c12; }
+              .alert.info { border-left-color: #3498db; }
+              .footer { background: #34495e; color: white; padding: 10px; text-align: center; border-radius: 0 0 5px 5px; font-size: 12px; }
+              .label { font-weight: bold; color: #2c3e50; }
+              .value { color: #e74c3c; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h2>🔔 Alerte Laravel API - Gestion Produits</h2>
+              </div>
+              <div class="content">
+                <p><strong>Nombre d'alertes :</strong> {{ .Alerts | len }}</p>
+                {{ range .Alerts }}
+                <div class="alert {{ .Labels.severity }}">
+                  <h3>{{ .Labels.alertname }}</h3>
+                  <p><span class="label">Sévérité :</span> <span class="value">{{ .Labels.severity | toUpper }}</span></p>
+                  <p><span class="label">Catégorie :</span> {{ .Labels.category }}</p>
+                  <p><span class="label">Description :</span> {{ .Annotations.description }}</p>
+                  <p><span class="label">Début :</span> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
+                  {{ if .EndsAt }}
+                  <p><span class="label">Fin :</span> {{ .EndsAt.Format "2006-01-02 15:04:05" }}</p>
+                  {{ end }}
+                </div>
+                {{ end }}
+              </div>
+              <div class="footer">
+                <p>Monitoring Laravel API - Gestion Produits avec Pipeline CI/CD</p>
+                <p>Grafana: <a href="http://localhost:3000" style="color: #3498db;">http://localhost:3000</a></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        
+  # Destinataire pour alertes critiques (même email mais template différent)
+  - name: 'email-rayan-critical'
+    email_configs:
+      - to: 'rayanngokeng1@gmail.com'
+        headers:
+          Subject: '🚨 [CRITIQUE] Laravel API - {{ .GroupLabels.alertname }} - ACTION IMMÉDIATE REQUISE'
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: #e74c3c; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+              .content { background: #fff3cd; padding: 20px; border: 3px solid #e74c3c; }
+              .alert { background: #fff; padding: 15px; margin: 10px 0; border-left: 5px solid #c0392b; }
+              .footer { background: #c0392b; color: white; padding: 10px; text-align: center; border-radius: 0 0 5px 5px; font-size: 12px; }
+              .label { font-weight: bold; color: #2c3e50; }
+              .value { color: #c0392b; font-weight: bold; font-size: 18px; }
+              .urgent { background: #e74c3c; color: white; padding: 10px; text-align: center; font-weight: bold; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h2>🚨 ALERTE CRITIQUE - ACTION IMMÉDIATE REQUISE</h2>
+              </div>
+              <div class="urgent">
+                ⚠️ INTERVENTION URGENTE NÉCESSAIRE ⚠️
+              </div>
+              <div class="content">
+                <p><strong>Nombre d'alertes critiques :</strong> {{ .Alerts | len }}</p>
+                {{ range .Alerts }}
+                <div class="alert">
+                  <h3>🔥 {{ .Labels.alertname }}</h3>
+                  <p><span class="label">Sévérité :</span> <span class="value">CRITIQUE</span></p>
+                  <p><span class="label">Catégorie :</span> {{ .Labels.category }}</p>
+                  <p><span class="label">Description :</span> {{ .Annotations.description }}</p>
+                  <p><span class="label">Début :</span> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
+                  <hr>
+                  <p><strong>Actions recommandées :</strong></p>
+                  <ul>
+                    <li>Vérifier les conteneurs Docker : <code>docker-compose ps</code></li>
+                    <li>Consulter les logs : <code>docker-compose logs -f app</code></li>
+                    <li>Vérifier Grafana : <a href="http://localhost:3000">http://localhost:3000</a></li>
+                    <li>Vérifier Kibana : <a href="http://localhost:5601">http://localhost:5601</a></li>
+                  </ul>
+                </div>
+                {{ end }}
+              </div>
+              <div class="footer">
+                <p>⚠️ Alerte Critique - Monitoring Laravel API</p>
+              </div>
+            </div>
+          </body>
+          </html>
+
+# Inhibition des alertes (éviter les doublons)
+inhibit_rules:
+  # Si une alerte critique est active, ne pas envoyer l'alerte warning correspondante
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'category']
