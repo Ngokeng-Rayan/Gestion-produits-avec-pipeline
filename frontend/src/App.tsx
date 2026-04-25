@@ -8,7 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import CategoriesPage from './pages/CategoriesPage';
 
-function GuestRoute({ children }: { children: React.ReactNode }) {
+function GuestRoute({ children }: Readonly<{ children: React.ReactNode }>) {
   const { user, loading } = useAuth();
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
   if (user) return <Navigate to="/" replace />;

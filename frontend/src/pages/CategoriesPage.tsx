@@ -41,31 +41,33 @@ export default function CategoriesPage() {
 
       {err && <div className="alert alert-error">{err}<button onClick={() => setErr('')}><X size={14} /></button></div>}
 
-      {loading
-        ? <div className="page-loading"><div className="spinner" /></div>
-        : cats.length === 0
-          ? <div className="empty-state">Aucune categorie</div>
-          : (
-            <div className="cat-grid">
-              {cats.map((c) => (
-                <div key={c.id} className="card cat-card">
-                  <div className="cat-card-header">
-                    <h3>{c.name}</h3>
-                    <div className="cat-card-actions">
-                      <button className="btn-icon" title="Modifier" onClick={() => { setEditing(c); setModal('edit'); }}><Edit size={16} /></button>
-                      <button className="btn-icon btn-icon-danger" title="Supprimer" onClick={() => setDeleting(c)}><Trash2 size={16} /></button>
-                    </div>
-                  </div>
-                  <p className="cat-slug">{c.slug}</p>
-                  {c.description && <p className="cat-desc">{c.description}</p>}
-                  <div className="cat-count">
-                    <Package size={16} />
-                    <span>{c.products_count ?? 0} produit{(c.products_count ?? 0) !== 1 ? 's' : ''}</span>
+      {loading && <div className="page-loading"><div className="spinner" /></div>}
+      {!loading && cats.length === 0 && <div className="empty-state">Aucune categorie</div>}
+      {!loading && cats.length > 0 && (
+        <div className="cat-grid">
+          {cats.map((c) => {
+            const count = c.products_count ?? 0;
+            const plural = count === 1 ? '' : 's';
+            return (
+              <div key={c.id} className="card cat-card">
+                <div className="cat-card-header">
+                  <h3>{c.name}</h3>
+                  <div className="cat-card-actions">
+                    <button className="btn-icon" title="Modifier" onClick={() => { setEditing(c); setModal('edit'); }}><Edit size={16} /></button>
+                    <button className="btn-icon btn-icon-danger" title="Supprimer" onClick={() => setDeleting(c)}><Trash2 size={16} /></button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="cat-slug">{c.slug}</p>
+                {c.description && <p className="cat-desc">{c.description}</p>}
+                <div className="cat-count">
+                  <Package size={16} />
+                  <span>{count} produit{plural}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {modal && (
         <CategoryModal
@@ -77,27 +79,27 @@ export default function CategoriesPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={() => setDeleting(null)} onKeyDown={(e) => e.key === 'Enter' && setDeleting(null)}>
-          <div className="modal modal-sm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setDeleting(null)}>
+          <dialog className="modal modal-sm" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2>Supprimer cette categorie ?</h2>
             <p>La categorie <strong>{deleting.name}</strong> sera supprimee definitivement.</p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
               <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
             </div>
-          </div>
+          </dialog>
         </div>
       )}
     </div>
   );
 }
 
-function CategoryModal({ mode, category, onClose, onSaved }: {
+function CategoryModal({ mode, category, onClose, onSaved }: Readonly<{
   mode: 'create' | 'edit';
   category: Category | null;
   onClose: () => void;
   onSaved: () => void;
-}) {
+}>) {
   const [name, setName] = useState(category?.name ?? '');
   const [slug, setSlug] = useState(category?.slug ?? '');
   const [description, setDescription] = useState(category?.description ?? '');
@@ -130,8 +132,8 @@ function CategoryModal({ mode, category, onClose, onSaved }: {
   }
 
   return (
-    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={onClose} onKeyDown={(e) => e.key === 'Enter' && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <dialog className="modal" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier la categorie' : 'Nouvelle categorie'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -157,7 +159,7 @@ function CategoryModal({ mode, category, onClose, onSaved }: {
             </button>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   );
 }

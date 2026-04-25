@@ -99,7 +99,7 @@ export default function ProductsPage() {
             </div>
             <div className="form-group chk">
               <label>
-                <input type="checkbox" checked={!!filters.in_stock} onChange={(e) => setFilters({ ...filters, in_stock: e.target.checked || undefined, page: 1 })} />
+                <input type="checkbox" checked={!!filters.in_stock} onChange={(e) => setFilters({ ...filters, in_stock: e.target.checked || undefined, page: 1 })} />{' '}
                 En stock uniquement
               </label>
             </div>
@@ -109,11 +109,9 @@ export default function ProductsPage() {
 
       {err && <div className="alert alert-error">{err}<button onClick={() => setErr('')}><X size={14} /></button></div>}
 
-      {loading
-        ? <div className="page-loading"><div className="spinner" /></div>
-        : !data || data.data.length === 0
-          ? <div className="empty-state">Aucun produit trouve</div>
-          : (
+      {loading && <div className="page-loading"><div className="spinner" /></div>}
+      {!loading && (!data || data.data.length === 0) && <div className="empty-state">Aucun produit trouve</div>}
+      {!loading && data && data.data.length > 0 && (
             <>
               <div className="table-wrap card">
                 <table className="table">
@@ -127,12 +125,15 @@ export default function ProductsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.data.map((p) => (
-                      <tr key={p.id} className={p.quantity === 0 ? 'row-danger' : p.quantity < 10 ? 'row-warn' : ''}>
+                    {data.data.map((p) => {
+                      const rowClass = p.quantity === 0 ? 'row-danger' : p.quantity < 10 ? 'row-warn' : '';
+                      const badgeClass = p.quantity === 0 ? 'badge-red' : p.quantity < 10 ? 'badge-yellow' : 'badge-green';
+                      return (
+                      <tr key={p.id} className={rowClass}>
                         <td className="td-name">{p.name}</td>
                         <td>{Number(p.price).toLocaleString('fr-FR')} FCFA</td>
                         <td>
-                          <span className={`badge ${p.quantity === 0 ? 'badge-red' : p.quantity < 10 ? 'badge-yellow' : 'badge-green'}`}>
+                          <span className={`badge ${badgeClass}`}>
                             {p.quantity}
                           </span>
                         </td>
@@ -142,7 +143,8 @@ export default function ProductsPage() {
                           <button className="btn-icon btn-icon-danger" title="Supprimer" onClick={() => setDeleting(p)}><Trash2 size={16} /></button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -158,7 +160,7 @@ export default function ProductsPage() {
                 </div>
               </div>
             </>
-          )}
+      )}
 
       {modal && (
         <ProductModal
@@ -171,28 +173,28 @@ export default function ProductsPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={() => setDeleting(null)} onKeyDown={(e) => e.key === 'Enter' && setDeleting(null)}>
-          <div className="modal modal-sm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setDeleting(null)}>
+          <dialog className="modal modal-sm" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2>Supprimer ce produit ?</h2>
             <p>Le produit <strong>{deleting.name}</strong> sera supprime definitivement.</p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
               <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
             </div>
-          </div>
+          </dialog>
         </div>
       )}
     </div>
   );
 }
 
-function ProductModal({ mode, product, categories, onClose, onSaved }: {
+function ProductModal({ mode, product, categories, onClose, onSaved }: Readonly<{
   mode: 'create' | 'edit';
   product: Product | null;
   categories: Category[];
   onClose: () => void;
   onSaved: () => void;
-}) {
+}>) {
   const [name, setName] = useState(product?.name ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
   const [price, setPrice] = useState(product ? String(product.price) : '');
@@ -229,8 +231,8 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: {
   }
 
   return (
-    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={onClose} onKeyDown={(e) => e.key === 'Enter' && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <dialog className="modal" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -273,7 +275,7 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: {
             </button>
           </div>
         </form>
-      </div>
+      </dialog>
     </div>
   );
 }

@@ -85,8 +85,8 @@ class MetricsController extends Controller
         // Taille de la base de données (approximative)
         try {
             $dbSize = DB::select("
-                SELECT SUM(data_length + index_length) as size 
-                FROM information_schema.TABLES 
+                SELECT SUM(data_length + index_length) as size
+                FROM information_schema.TABLES
                 WHERE table_schema = DATABASE()
             ");
             $dbSizeBytes = $dbSize[0]->size ?? 0;
