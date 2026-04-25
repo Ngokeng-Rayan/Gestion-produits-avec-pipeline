@@ -1,6 +1,6 @@
-    {
-        "dashboard": {
-            "title": "Laravel API - Monitoring Complet",
+{
+    "uid": "laravel-api-monitoring",
+    "title": "Laravel API - Monitoring Complet",
             "tags": [
                 "laravel",
                 "api",
@@ -484,9 +484,5 @@
                         { "color": "green", "value": null }, { "color": "orange", "value": 64 }, { "color": "red", "value": 128 }
                     ]}}}
                 }
-            ]
-        },
-        "overwrite": true,
-        "folderId": 0,
-        "folderUid": ""
-    }
+    ]
+}
