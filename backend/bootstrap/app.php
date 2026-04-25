@@ -15,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Pas besoin de statefulApi() pour une API pure
         // $middleware->statefulApi();
-        
+
+        // Tracking métriques sur toutes les requêtes
+        $middleware->append(\App\Http\Middleware\MetricsMiddleware::class);
+
         // Forcer les réponses JSON pour toutes les routes API
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,

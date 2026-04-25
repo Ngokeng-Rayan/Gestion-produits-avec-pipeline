@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class MetricsController extends Controller
@@ -139,6 +140,48 @@ class MetricsController extends Controller
         $metrics[] = "# HELP laravel_memory_peak_bytes Pic d'utilisation mémoire en bytes";
         $metrics[] = "# TYPE laravel_memory_peak_bytes gauge";
         $metrics[] = "laravel_memory_peak_bytes $memoryPeak";
+
+        // ==========================================
+        // MÉTRIQUES HTTP (requêtes, erreurs, temps de réponse)
+        // ==========================================
+        try {
+            $totalRequests = Cache::get('metrics_request_total', 0);
+            $errors4xx     = Cache::get('metrics_errors_4xx', 0);
+            $errors5xx     = Cache::get('metrics_errors_5xx', 0);
+            $times         = Cache::get('metrics_response_times', []);
+
+            $avgResponseTime = count($times) > 0 ? round(array_sum($times) / count($times), 4) : 0;
+            $maxResponseTime = count($times) > 0 ? round(max($times), 4) : 0;
+            $errorRate       = $totalRequests > 0
+                ? round(($errors4xx + $errors5xx) / $totalRequests * 100, 2)
+                : 0;
+
+            $metrics[] = "# HELP laravel_http_requests_total Nombre total de requêtes HTTP reçues";
+            $metrics[] = "# TYPE laravel_http_requests_total counter";
+            $metrics[] = "laravel_http_requests_total $totalRequests";
+
+            $metrics[] = "# HELP laravel_http_errors_4xx Nombre d'erreurs HTTP 4xx";
+            $metrics[] = "# TYPE laravel_http_errors_4xx counter";
+            $metrics[] = "laravel_http_errors_4xx $errors4xx";
+
+            $metrics[] = "# HELP laravel_http_errors_5xx Nombre d'erreurs HTTP 5xx";
+            $metrics[] = "# TYPE laravel_http_errors_5xx counter";
+            $metrics[] = "laravel_http_errors_5xx $errors5xx";
+
+            $metrics[] = "# HELP laravel_http_error_rate Taux d'erreur HTTP (%)";
+            $metrics[] = "# TYPE laravel_http_error_rate gauge";
+            $metrics[] = "laravel_http_error_rate $errorRate";
+
+            $metrics[] = "# HELP laravel_response_time_avg_seconds Temps de réponse moyen (secondes)";
+            $metrics[] = "# TYPE laravel_response_time_avg_seconds gauge";
+            $metrics[] = "laravel_response_time_avg_seconds $avgResponseTime";
+
+            $metrics[] = "# HELP laravel_response_time_max_seconds Temps de réponse maximum (secondes)";
+            $metrics[] = "# TYPE laravel_response_time_max_seconds gauge";
+            $metrics[] = "laravel_response_time_max_seconds $maxResponseTime";
+        } catch (\Exception $e) {
+            $metrics[] = "# Cache unavailable for HTTP metrics";
+        }
 
         // Retourner les métriques au format texte brut
         return response(implode("\n", $metrics)."\n")

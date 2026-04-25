@@ -35,19 +35,6 @@ scrape_configs:
           service: 'laravel-api'
           environment: 'local'
 
-  # Surveillance de l'application Laravel (production o2switch)
-  - job_name: 'laravel-api-production'
-    scrape_interval: 30s
-    metrics_path: '/metrics'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: true
-    static_configs:
-      - targets: ['ngokeng.cdwfs.net']
-        labels:
-          service: 'laravel-api'
-          environment: 'production'
-
   # Node Exporter pour les métriques système (CPU, RAM, Disque)
   - job_name: 'node-exporter'
     static_configs:

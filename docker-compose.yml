@@ -162,7 +162,19 @@ services:
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      # ── Collectors supplémentaires ──
+      - '--collector.processes'         # Nombre de processus actifs
+      - '--collector.tcpstat'           # Connexions TCP (ESTABLISHED, TIME_WAIT, etc.)
+      - '--collector.interrupts'        # Interruptions CPU
+      - '--collector.network_route'     # Table de routage réseau
+      - '--collector.ntp'               # Synchronisation NTP
+      - '--collector.buddyinfo'         # Fragmentation mémoire
+      - '--collector.sockstat'          # Statistiques sockets (déjà activé par défaut)
+      - '--collector.vmstat'            # Mémoire virtuelle, swap, forks
+      - '--collector.pressure'          # Pression CPU/Mémoire/IO (PSI)
+      - '--collector.cpu.info'          # Informations détaillées CPU (modèle, fréquence)
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
