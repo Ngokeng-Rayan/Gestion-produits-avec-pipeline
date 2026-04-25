@@ -57,7 +57,7 @@ groups:
     rules:
       # Alerte API indisponible
       - alert: LaravelAPIDown
-        expr: up{job="laravel-api"} == 0
+        expr: up{job="laravel-api-local"} == 0
         for: 1m
         labels:
           severity: critical
@@ -90,7 +90,7 @@ groups:
           
       # Alerte temps de réponse lent
       - alert: SlowResponseTime
-        expr: laravel_request_duration_seconds > 2
+        expr: laravel_response_time_avg_seconds > 2
         for: 3m
         labels:
           severity: warning
@@ -101,7 +101,7 @@ groups:
           
       # Alerte temps de réponse critique
       - alert: CriticalResponseTime
-        expr: laravel_request_duration_seconds > 5
+        expr: laravel_response_time_avg_seconds > 5
         for: 1m
         labels:
           severity: critical
@@ -138,16 +138,16 @@ groups:
   - name: prometheus_alerts
     interval: 30s
     rules:
-      # Alerte échec de collecte
+      # Alerte échec de collecte Laravel
       - alert: PrometheusScrapeFailing
-        expr: up == 0
+        expr: up{job="laravel-api-local"} == 0
         for: 2m
         labels:
           severity: warning
           category: monitoring
         annotations:
-          summary: "Échec de collecte des métriques"
-          description: "Prometheus ne peut pas collecter les métriques de {{ $labels.job }} depuis 2 minutes."
+          summary: "Échec de collecte des métriques Laravel"
+          description: "Prometheus ne peut pas collecter les métriques Laravel depuis 2 minutes. Serveur peut-être arrêté."
           
       # Alerte Prometheus surchargé
       - alert: PrometheusHighLoad
