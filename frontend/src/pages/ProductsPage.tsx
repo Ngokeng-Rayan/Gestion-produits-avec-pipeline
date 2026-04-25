@@ -3,6 +3,7 @@ import { products, categories as catApi } from '../api/inventory';
 import { extractMessage } from '../api/client';
 import type { Product, Category, PaginatedResponse, ProductFilters } from '../types/api';
 import { Plus, Search, Edit, Trash2, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ProductsPage() {
   const [data, setData] = useState<PaginatedResponse<Product> | null>(null);
@@ -171,16 +172,13 @@ export default function ProductsPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay">
-          <div className="modal modal-sm" role="document">
-            <h2>Supprimer ce produit ?</h2>
-            <p>Le produit <strong>{deleting.name}</strong> sera supprime definitivement.</p>
-            <div className="modal-actions">
-              <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
-              <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Supprimer ce produit ?"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleting(null)}
+        >
+          <p>Le produit <strong>{deleting.name}</strong> sera supprime definitivement.</p>
+        </ConfirmModal>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { categories as catApi } from '../api/inventory';
 import { extractMessage } from '../api/client';
 import type { Category } from '../types/api';
 import { Plus, Edit, Trash2, X, Package } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function CategoriesPage() {
   const [cats, setCats] = useState<Category[]>([]);
@@ -79,16 +80,13 @@ export default function CategoriesPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay">
-          <div className="modal modal-sm" role="document">
-            <h2>Supprimer cette categorie ?</h2>
-            <p>La categorie <strong>{deleting.name}</strong> sera supprimee definitivement.</p>
-            <div className="modal-actions">
-              <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
-              <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Supprimer cette categorie ?"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleting(null)}
+        >
+          <p>La categorie <strong>{deleting.name}</strong> sera supprimee definitivement.</p>
+        </ConfirmModal>
       )}
     </div>
   );
