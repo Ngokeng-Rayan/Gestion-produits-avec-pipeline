@@ -89,6 +89,7 @@ jobs:
             "APP_URL=http://localhost" \
             "DB_CONNECTION=sqlite" \
             "DB_DATABASE=database/database.sqlite" \
+            "LOG_CHANNEL=single" \
             "CACHE_DRIVER=file" \
             "SESSION_DRIVER=file" > .env
           php artisan key:generate
@@ -135,7 +136,7 @@ jobs:
 
       - name: Tests d'intégration (MySQL)
         working-directory: backend
-        run: php artisan test --testsuite=Feature --stop-on-failure
+        run: php artisan test --testsuite=Feature --exclude-group=monitoring --stop-on-failure
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

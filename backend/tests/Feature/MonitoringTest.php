@@ -9,6 +9,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
+/**
+ * @group monitoring
+ */
 class MonitoringTest extends TestCase
 {
     use RefreshDatabase;
