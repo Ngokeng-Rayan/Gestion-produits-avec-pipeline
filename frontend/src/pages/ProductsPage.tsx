@@ -98,10 +98,8 @@ export default function ProductsPage() {
               </select>
             </div>
             <div className="form-group chk">
-              <label>
-                <input type="checkbox" checked={!!filters.in_stock} onChange={(e) => setFilters({ ...filters, in_stock: e.target.checked || undefined, page: 1 })} />{' '}
-                En stock uniquement
-              </label>
+              <label htmlFor="filter-in-stock">En stock uniquement</label>
+              <input id="filter-in-stock" type="checkbox" checked={!!filters.in_stock} onChange={(e) => setFilters({ ...filters, in_stock: e.target.checked || undefined, page: 1 })} />
             </div>
           </div>
         </div>
@@ -173,15 +171,15 @@ export default function ProductsPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" onClick={() => setDeleting(null)}>
-          <dialog className="modal modal-sm" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal modal-sm" role="document">
             <h2>Supprimer ce produit ?</h2>
             <p>Le produit <strong>{deleting.name}</strong> sera supprime definitivement.</p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
               <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
             </div>
-          </dialog>
+          </div>
         </div>
       )}
     </div>
@@ -231,8 +229,8 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: Readonly<
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <dialog className="modal" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay">
+      <div className="modal" role="document">
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -275,7 +273,7 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: Readonly<
             </button>
           </div>
         </form>
-      </dialog>
+      </div>
     </div>
   );
 }

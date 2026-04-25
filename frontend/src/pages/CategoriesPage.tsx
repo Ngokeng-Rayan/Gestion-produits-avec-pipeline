@@ -79,15 +79,15 @@ export default function CategoriesPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" onClick={() => setDeleting(null)}>
-          <dialog className="modal modal-sm" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal modal-sm" role="document">
             <h2>Supprimer cette categorie ?</h2>
             <p>La categorie <strong>{deleting.name}</strong> sera supprimee definitivement.</p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setDeleting(null)}>Annuler</button>
               <button className="btn btn-danger" onClick={handleDelete}>Supprimer</button>
             </div>
-          </dialog>
+          </div>
         </div>
       )}
     </div>
@@ -132,8 +132,8 @@ function CategoryModal({ mode, category, onClose, onSaved }: Readonly<{
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <dialog className="modal" open aria-modal="true" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay">
+      <div className="modal" role="document">
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier la categorie' : 'Nouvelle categorie'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -159,7 +159,7 @@ function CategoryModal({ mode, category, onClose, onSaved }: Readonly<{
             </button>
           </div>
         </form>
-      </dialog>
+      </div>
     </div>
   );
 }

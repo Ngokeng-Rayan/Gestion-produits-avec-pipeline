@@ -56,7 +56,6 @@ export default function Layout() {
       <div className="main-area">
         <header className="topbar">
           <button className="burger" onClick={() => setOpen(true)}><Menu size={22} /></button>
-          <span className="topbar-title" />
         </header>
         <main className="content">
           <Outlet />
