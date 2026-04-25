@@ -4,6 +4,7 @@ import { extractMessage } from '../api/client';
 import type { Category } from '../types/api';
 import { Plus, Edit, Trash2, X, Package } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import ModalWrapper from '../components/ModalWrapper';
 
 export default function CategoriesPage() {
   const [cats, setCats] = useState<Category[]>([]);
@@ -130,9 +131,8 @@ function CategoryModal({ mode, category, onClose, onSaved }: Readonly<{
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" role="document">
-        <div className="modal-header">
+    <ModalWrapper>
+      <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier la categorie' : 'Nouvelle categorie'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
@@ -157,7 +157,6 @@ function CategoryModal({ mode, category, onClose, onSaved }: Readonly<{
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalWrapper>
   );
 }

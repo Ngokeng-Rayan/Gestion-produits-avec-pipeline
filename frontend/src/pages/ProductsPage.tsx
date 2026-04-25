@@ -4,6 +4,7 @@ import { extractMessage } from '../api/client';
 import type { Product, Category, PaginatedResponse, ProductFilters } from '../types/api';
 import { Plus, Search, Edit, Trash2, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import ModalWrapper from '../components/ModalWrapper';
 
 export default function ProductsPage() {
   const [data, setData] = useState<PaginatedResponse<Product> | null>(null);
@@ -227,9 +228,8 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: Readonly<
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" role="document">
-        <div className="modal-header">
+    <ModalWrapper>
+      <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
@@ -271,7 +271,6 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: Readonly<
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalWrapper>
   );
 }
