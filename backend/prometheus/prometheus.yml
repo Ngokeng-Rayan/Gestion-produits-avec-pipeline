@@ -25,12 +25,25 @@ scrape_configs:
         labels:
           service: 'prometheus'
 
-  # Surveillance de l'application Laravel via Nginx
-  - job_name: 'laravel-api'
+  # Surveillance de l'application Laravel (local — php artisan serve)
+  - job_name: 'laravel-api-local'
     scrape_interval: 10s
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['nginx:80']
+      - targets: ['host.docker.internal:8000']
+        labels:
+          service: 'laravel-api'
+          environment: 'local'
+
+  # Surveillance de l'application Laravel (production o2switch)
+  - job_name: 'laravel-api-production'
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ['ngokeng.cdwfs.net']
         labels:
           service: 'laravel-api'
           environment: 'production'

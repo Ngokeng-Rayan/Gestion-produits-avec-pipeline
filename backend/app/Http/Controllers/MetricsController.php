@@ -20,41 +20,62 @@ class MetricsController extends Controller
         // MÉTRIQUES APPLICATIVES
         // ==========================================
 
-        // Nombre total d'utilisateurs
-        $totalUsers = User::count();
-        $metrics[] = "# HELP laravel_users_total Nombre total d'utilisateurs";
-        $metrics[] = "# TYPE laravel_users_total gauge";
-        $metrics[] = "laravel_users_total $totalUsers";
+        // Métriques applicatives (nécessitent la DB)
+        try {
+            $totalUsers = User::count();
+            $totalProducts = Product::count();
+            $totalCategories = Category::count();
+            $productsInStock = Product::where('quantity', '>', 0)->count();
+            $productsOutOfStock = Product::where('quantity', '=', 0)->count();
+            $totalStockValue = Product::sum(DB::raw('price * quantity')) ?? 0;
+            $avgPrice = Product::avg('price') ?? 0;
+            $avgQuantity = Product::avg('quantity') ?? 0;
 
-        // Nombre total de produits
-        $totalProducts = Product::count();
-        $metrics[] = "# HELP laravel_products_total Nombre total de produits";
-        $metrics[] = "# TYPE laravel_products_total gauge";
-        $metrics[] = "laravel_products_total $totalProducts";
+            $metrics[] = "# HELP laravel_users_total Nombre total d'utilisateurs";
+            $metrics[] = "# TYPE laravel_users_total gauge";
+            $metrics[] = "laravel_users_total $totalUsers";
 
-        // Nombre total de catégories
-        $totalCategories = Category::count();
-        $metrics[] = "# HELP laravel_categories_total Nombre total de catégories";
-        $metrics[] = "# TYPE laravel_categories_total gauge";
-        $metrics[] = "laravel_categories_total $totalCategories";
+            $metrics[] = "# HELP laravel_products_total Nombre total de produits";
+            $metrics[] = "# TYPE laravel_products_total gauge";
+            $metrics[] = "laravel_products_total $totalProducts";
 
-        // Produits en stock
-        $productsInStock = Product::where('quantity', '>', 0)->count();
-        $metrics[] = "# HELP laravel_products_in_stock Nombre de produits en stock";
-        $metrics[] = "# TYPE laravel_products_in_stock gauge";
-        $metrics[] = "laravel_products_in_stock $productsInStock";
+            $metrics[] = "# HELP laravel_categories_total Nombre total de catégories";
+            $metrics[] = "# TYPE laravel_categories_total gauge";
+            $metrics[] = "laravel_categories_total $totalCategories";
 
-        // Produits en rupture de stock
-        $productsOutOfStock = Product::where('quantity', '=', 0)->count();
-        $metrics[] = "# HELP laravel_products_out_of_stock Nombre de produits en rupture";
-        $metrics[] = "# TYPE laravel_products_out_of_stock gauge";
-        $metrics[] = "laravel_products_out_of_stock $productsOutOfStock";
+            $metrics[] = "# HELP laravel_products_in_stock Nombre de produits en stock";
+            $metrics[] = "# TYPE laravel_products_in_stock gauge";
+            $metrics[] = "laravel_products_in_stock $productsInStock";
 
-        // Valeur totale du stock
-        $totalStockValue = Product::sum(DB::raw('price * quantity'));
-        $metrics[] = "# HELP laravel_stock_value_total Valeur totale du stock en euros";
-        $metrics[] = "# TYPE laravel_stock_value_total gauge";
-        $metrics[] = "laravel_stock_value_total $totalStockValue";
+            $metrics[] = "# HELP laravel_products_out_of_stock Nombre de produits en rupture";
+            $metrics[] = "# TYPE laravel_products_out_of_stock gauge";
+            $metrics[] = "laravel_products_out_of_stock $productsOutOfStock";
+
+            $metrics[] = "# HELP laravel_stock_value_total Valeur totale du stock en euros";
+            $metrics[] = "# TYPE laravel_stock_value_total gauge";
+            $metrics[] = "laravel_stock_value_total $totalStockValue";
+
+            $metrics[] = "# HELP laravel_products_avg_price Prix moyen des produits";
+            $metrics[] = "# TYPE laravel_products_avg_price gauge";
+            $metrics[] = "laravel_products_avg_price $avgPrice";
+
+            $metrics[] = "# HELP laravel_products_avg_quantity Quantité moyenne en stock";
+            $metrics[] = "# TYPE laravel_products_avg_quantity gauge";
+            $metrics[] = "laravel_products_avg_quantity $avgQuantity";
+
+            $productsByCategory = Product::select('category_id', DB::raw('count(*) as count'))
+                ->groupBy('category_id')
+                ->get();
+            $metrics[] = "# HELP laravel_products_by_category Nombre de produits par catégorie";
+            $metrics[] = "# TYPE laravel_products_by_category gauge";
+            foreach ($productsByCategory as $item) {
+                $categoryId = $item->category_id ?? 'null';
+                $metrics[] = "laravel_products_by_category{category_id=\"$categoryId\"} {$item->count}";
+            }
+        } catch (\Exception $e) {
+            $metrics[] = "# DB unavailable: {$e->getMessage()}";
+            $metrics[] = "laravel_db_up 0";
+        }
 
         // ==========================================
         // MÉTRIQUES DE BASE DE DONNÉES
@@ -118,35 +139,6 @@ class MetricsController extends Controller
         $metrics[] = "# HELP laravel_memory_peak_bytes Pic d'utilisation mémoire en bytes";
         $metrics[] = "# TYPE laravel_memory_peak_bytes gauge";
         $metrics[] = "laravel_memory_peak_bytes $memoryPeak";
-
-        // ==========================================
-        // MÉTRIQUES MÉTIER
-        // ==========================================
-
-        // Prix moyen des produits
-        $avgPrice = Product::avg('price') ?? 0;
-        $metrics[] = "# HELP laravel_products_avg_price Prix moyen des produits";
-        $metrics[] = "# TYPE laravel_products_avg_price gauge";
-        $metrics[] = "laravel_products_avg_price $avgPrice";
-
-        // Quantité moyenne en stock
-        $avgQuantity = Product::avg('quantity') ?? 0;
-        $metrics[] = "# HELP laravel_products_avg_quantity Quantité moyenne en stock";
-        $metrics[] = "# TYPE laravel_products_avg_quantity gauge";
-        $metrics[] = "laravel_products_avg_quantity $avgQuantity";
-
-        // Produits par catégorie
-        $productsByCategory = Product::select('category_id', DB::raw('count(*) as count'))
-            ->groupBy('category_id')
-            ->get();
-
-        $metrics[] = "# HELP laravel_products_by_category Nombre de produits par catégorie";
-        $metrics[] = "# TYPE laravel_products_by_category gauge";
-        foreach ($productsByCategory as $item) {
-            $categoryId = $item->category_id ?? 'null';
-            $count = $item->count;
-            $metrics[] = "laravel_products_by_category{category_id=\"$categoryId\"} $count";
-        }
 
         // Retourner les métriques au format texte brut
         return response(implode("\n", $metrics)."\n")
