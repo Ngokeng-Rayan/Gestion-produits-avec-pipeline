@@ -52,11 +52,11 @@ export default function Layout() {
           </button>
         </div>
       </aside>
-      {open && <div className="sidebar-overlay" onClick={() => setOpen(false)} />}
+      {open && <div className="sidebar-overlay" role="button" tabIndex={0} aria-label="Fermer le menu" onClick={() => setOpen(false)} onKeyDown={(e) => e.key === 'Enter' && setOpen(false)} />}
       <div className="main-area">
         <header className="topbar">
           <button className="burger" onClick={() => setOpen(true)}><Menu size={22} /></button>
-          <h2 className="topbar-title" />
+          <h2 className="topbar-title" aria-label="Navigation"></h2>
         </header>
         <main className="content">
           <Outlet />

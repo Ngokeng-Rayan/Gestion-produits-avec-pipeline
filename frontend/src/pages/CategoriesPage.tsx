@@ -77,8 +77,8 @@ export default function CategoriesPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" onClick={() => setDeleting(null)}>
-          <div className="modal modal-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={() => setDeleting(null)} onKeyDown={(e) => e.key === 'Enter' && setDeleting(null)}>
+          <div className="modal modal-sm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2>Supprimer cette categorie ?</h2>
             <p>La categorie <strong>{deleting.name}</strong> sera supprimee definitivement.</p>
             <div className="modal-actions">
@@ -130,8 +130,8 @@ function CategoryModal({ mode, category, onClose, onSaved }: {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={onClose} onKeyDown={(e) => e.key === 'Enter' && onClose()}>
+      <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier la categorie' : 'Nouvelle categorie'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -139,16 +139,16 @@ function CategoryModal({ mode, category, onClose, onSaved }: {
         {err && <div className="alert alert-error">{err}</div>}
         <form onSubmit={onSubmit}>
           <div className="form-group">
-            <label>Nom *</label>
-            <input type="text" value={name} onChange={(e) => autoSlug(e.target.value)} required />
+            <label htmlFor="cat-name">Nom *</label>
+            <input id="cat-name" type="text" value={name} onChange={(e) => autoSlug(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Slug *</label>
-            <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+            <label htmlFor="cat-slug">Slug *</label>
+            <input id="cat-slug" type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Description</label>
-            <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <label htmlFor="cat-description">Description</label>
+            <textarea id="cat-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
           <div className="modal-actions">
             <button type="button" className="btn btn-outline" onClick={onClose}>Annuler</button>

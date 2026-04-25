@@ -67,23 +67,23 @@ export default function ProductsPage() {
         <div className="card filters-card">
           <div className="filters-grid">
             <div className="form-group">
-              <label>Categorie</label>
-              <select value={filters.category_id ?? ''} onChange={(e) => setFilters({ ...filters, category_id: e.target.value ? Number(e.target.value) : undefined, page: 1 })}>
+              <label htmlFor="filter-category">Categorie</label>
+              <select id="filter-category" value={filters.category_id ?? ''} onChange={(e) => setFilters({ ...filters, category_id: e.target.value ? Number(e.target.value) : undefined, page: 1 })}>
                 <option value="">Toutes</option>
                 {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label>Prix min</label>
-              <input type="number" min={0} value={filters.min_price ?? ''} onChange={(e) => setFilters({ ...filters, min_price: e.target.value ? Number(e.target.value) : undefined, page: 1 })} />
+              <label htmlFor="filter-min-price">Prix min</label>
+              <input id="filter-min-price" type="number" min={0} value={filters.min_price ?? ''} onChange={(e) => setFilters({ ...filters, min_price: e.target.value ? Number(e.target.value) : undefined, page: 1 })} />
             </div>
             <div className="form-group">
-              <label>Prix max</label>
-              <input type="number" min={0} value={filters.max_price ?? ''} onChange={(e) => setFilters({ ...filters, max_price: e.target.value ? Number(e.target.value) : undefined, page: 1 })} />
+              <label htmlFor="filter-max-price">Prix max</label>
+              <input id="filter-max-price" type="number" min={0} value={filters.max_price ?? ''} onChange={(e) => setFilters({ ...filters, max_price: e.target.value ? Number(e.target.value) : undefined, page: 1 })} />
             </div>
             <div className="form-group">
-              <label>Trier par</label>
-              <select value={filters.sort_by ?? 'created_at'} onChange={(e) => setFilters({ ...filters, sort_by: e.target.value as ProductFilters['sort_by'] })}>
+              <label htmlFor="filter-sort-by">Trier par</label>
+              <select id="filter-sort-by" value={filters.sort_by ?? 'created_at'} onChange={(e) => setFilters({ ...filters, sort_by: e.target.value as ProductFilters['sort_by'] })}>
                 <option value="created_at">Date</option>
                 <option value="name">Nom</option>
                 <option value="price">Prix</option>
@@ -91,8 +91,8 @@ export default function ProductsPage() {
               </select>
             </div>
             <div className="form-group">
-              <label>Ordre</label>
-              <select value={filters.sort_order ?? 'desc'} onChange={(e) => setFilters({ ...filters, sort_order: e.target.value as 'asc' | 'desc' })}>
+              <label htmlFor="filter-sort-order">Ordre</label>
+              <select id="filter-sort-order" value={filters.sort_order ?? 'desc'} onChange={(e) => setFilters({ ...filters, sort_order: e.target.value as 'asc' | 'desc' })}>
                 <option value="desc">Decroissant</option>
                 <option value="asc">Croissant</option>
               </select>
@@ -171,8 +171,8 @@ export default function ProductsPage() {
       )}
 
       {deleting && (
-        <div className="modal-overlay" onClick={() => setDeleting(null)}>
-          <div className="modal modal-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={() => setDeleting(null)} onKeyDown={(e) => e.key === 'Enter' && setDeleting(null)}>
+          <div className="modal modal-sm" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2>Supprimer ce produit ?</h2>
             <p>Le produit <strong>{deleting.name}</strong> sera supprime definitivement.</p>
             <div className="modal-actions">
@@ -229,8 +229,8 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Fermer" onClick={onClose} onKeyDown={(e) => e.key === 'Enter' && onClose()}>
+      <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{mode === 'edit' ? 'Modifier le produit' : 'Nouveau produit'}</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
@@ -238,33 +238,33 @@ function ProductModal({ mode, product, categories, onClose, onSaved }: {
         {err && <div className="alert alert-error">{err}</div>}
         <form onSubmit={onSubmit}>
           <div className="form-group">
-            <label>Nom *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            <label htmlFor="prod-name">Nom *</label>
+            <input id="prod-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Description</label>
-            <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <label htmlFor="prod-description">Description</label>
+            <textarea id="prod-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Prix *</label>
-              <input type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
+              <label htmlFor="prod-price">Prix *</label>
+              <input id="prod-price" type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label>Quantite *</label>
-              <input type="number" min={0} value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
+              <label htmlFor="prod-quantity">Quantite *</label>
+              <input id="prod-quantity" type="number" min={0} value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
             </div>
           </div>
           <div className="form-group">
-            <label>Categorie</label>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <label htmlFor="prod-category">Categorie</label>
+            <select id="prod-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
               <option value="">Sans categorie</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label>Image (URL)</label>
-            <input type="text" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..." />
+            <label htmlFor="prod-image">Image (URL)</label>
+            <input id="prod-image" type="text" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..." />
           </div>
           <div className="modal-actions">
             <button type="button" className="btn btn-outline" onClick={onClose}>Annuler</button>
