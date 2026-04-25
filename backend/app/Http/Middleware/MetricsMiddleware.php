@@ -19,12 +19,14 @@ class MetricsMiddleware
         $status   = $response->getStatusCode();
 
         try {
-            Cache::increment('metrics_request_total');
+            $ttl = now()->addYear();
+
+            Cache::put('metrics_request_total', Cache::get('metrics_request_total', 0) + 1, $ttl);
 
             if ($status >= 500) {
-                Cache::increment('metrics_errors_5xx');
+                Cache::put('metrics_errors_5xx', Cache::get('metrics_errors_5xx', 0) + 1, $ttl);
             } elseif ($status >= 400) {
-                Cache::increment('metrics_errors_4xx');
+                Cache::put('metrics_errors_4xx', Cache::get('metrics_errors_4xx', 0) + 1, $ttl);
             }
 
             $times   = Cache::get('metrics_response_times', []);
@@ -32,9 +34,7 @@ class MetricsMiddleware
             if (count($times) > 200) {
                 $times = array_slice($times, -200);
             }
-            Cache::put('metrics_response_times', $times, now()->addDay());
-
-            Cache::put('metrics_last_status', $status, now()->addDay());
+            Cache::put('metrics_response_times', $times, $ttl);
         } catch (\Exception $e) {
             // Silencieux
         }
